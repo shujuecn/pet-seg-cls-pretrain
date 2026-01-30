@@ -5603,6 +5603,406 @@
   ],
   "val": [
     {
+      "image": "data\\image\\cat\\Birman_177.jpg",
+      "mask": "data\\mask\\cat\\Birman_177.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\dog\\american_pit_bull_terrier_44.jpg",
+      "mask": "data\\mask\\dog\\american_pit_bull_terrier_44.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\american_pit_bull_terrier_55.jpg",
+      "mask": "data\\mask\\dog\\american_pit_bull_terrier_55.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\american_bulldog_137.jpg",
+      "mask": "data\\mask\\dog\\american_bulldog_137.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\beagle_24.jpg",
+      "mask": "data\\mask\\dog\\beagle_24.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\cat\\Birman_89.jpg",
+      "mask": "data\\mask\\cat\\Birman_89.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\cat\\Bombay_16.jpg",
+      "mask": "data\\mask\\cat\\Bombay_16.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\cat\\Birman_173.jpg",
+      "mask": "data\\mask\\cat\\Birman_173.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\dog\\american_pit_bull_terrier_67.jpg",
+      "mask": "data\\mask\\dog\\american_pit_bull_terrier_67.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\cat\\Birman_64.jpg",
+      "mask": "data\\mask\\cat\\Birman_64.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\dog\\american_bulldog_39.jpg",
+      "mask": "data\\mask\\dog\\american_bulldog_39.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\beagle_102.jpg",
+      "mask": "data\\mask\\dog\\beagle_102.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\cat\\Bengal_111.jpg",
+      "mask": "data\\mask\\cat\\Bengal_111.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\dog\\beagle_160.jpg",
+      "mask": "data\\mask\\dog\\beagle_160.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\cat\\Bombay_57.jpg",
+      "mask": "data\\mask\\cat\\Bombay_57.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\dog\\basset_hound_4.jpg",
+      "mask": "data\\mask\\dog\\basset_hound_4.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\cat\\Abyssinian_2.jpg",
+      "mask": "data\\mask\\cat\\Abyssinian_2.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\cat\\Abyssinian_58.jpg",
+      "mask": "data\\mask\\cat\\Abyssinian_58.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\cat\\Birman_115.jpg",
+      "mask": "data\\mask\\cat\\Birman_115.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\cat\\Bengal_177.jpg",
+      "mask": "data\\mask\\cat\\Bengal_177.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\dog\\american_pit_bull_terrier_89.jpg",
+      "mask": "data\\mask\\dog\\american_pit_bull_terrier_89.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\basset_hound_17.jpg",
+      "mask": "data\\mask\\dog\\basset_hound_17.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\american_pit_bull_terrier_174.jpg",
+      "mask": "data\\mask\\dog\\american_pit_bull_terrier_174.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\beagle_19.jpg",
+      "mask": "data\\mask\\dog\\beagle_19.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\american_pit_bull_terrier_135.jpg",
+      "mask": "data\\mask\\dog\\american_pit_bull_terrier_135.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\american_pit_bull_terrier_53.jpg",
+      "mask": "data\\mask\\dog\\american_pit_bull_terrier_53.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\american_pit_bull_terrier_123.jpg",
+      "mask": "data\\mask\\dog\\american_pit_bull_terrier_123.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\basset_hound_85.jpg",
+      "mask": "data\\mask\\dog\\basset_hound_85.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\cat\\Bombay_155.jpg",
+      "mask": "data\\mask\\cat\\Bombay_155.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\dog\\basset_hound_197.jpg",
+      "mask": "data\\mask\\dog\\basset_hound_197.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\beagle_56.jpg",
+      "mask": "data\\mask\\dog\\beagle_56.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\cat\\Abyssinian_62.jpg",
+      "mask": "data\\mask\\cat\\Abyssinian_62.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\dog\\basset_hound_120.jpg",
+      "mask": "data\\mask\\dog\\basset_hound_120.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\beagle_125.jpg",
+      "mask": "data\\mask\\dog\\beagle_125.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\american_bulldog_38.jpg",
+      "mask": "data\\mask\\dog\\american_bulldog_38.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\cat\\Abyssinian_116.jpg",
+      "mask": "data\\mask\\cat\\Abyssinian_116.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\dog\\american_bulldog_177.jpg",
+      "mask": "data\\mask\\dog\\american_bulldog_177.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\cat\\Bombay_45.jpg",
+      "mask": "data\\mask\\cat\\Bombay_45.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\dog\\basset_hound_21.jpg",
+      "mask": "data\\mask\\dog\\basset_hound_21.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\cat\\Birman_94.jpg",
+      "mask": "data\\mask\\cat\\Birman_94.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\dog\\american_bulldog_30.jpg",
+      "mask": "data\\mask\\dog\\american_bulldog_30.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\cat\\Bengal_8.jpg",
+      "mask": "data\\mask\\cat\\Bengal_8.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\dog\\american_bulldog_187.jpg",
+      "mask": "data\\mask\\dog\\american_bulldog_187.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\cat\\Abyssinian_151.jpg",
+      "mask": "data\\mask\\cat\\Abyssinian_151.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\cat\\Birman_174.jpg",
+      "mask": "data\\mask\\cat\\Birman_174.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\dog\\american_bulldog_27.jpg",
+      "mask": "data\\mask\\dog\\american_bulldog_27.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\basset_hound_145.jpg",
+      "mask": "data\\mask\\dog\\basset_hound_145.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\beagle_71.jpg",
+      "mask": "data\\mask\\dog\\beagle_71.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\american_pit_bull_terrier_161.jpg",
+      "mask": "data\\mask\\dog\\american_pit_bull_terrier_161.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\cat\\Bombay_48.jpg",
+      "mask": "data\\mask\\cat\\Bombay_48.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\cat\\Birman_166.jpg",
+      "mask": "data\\mask\\cat\\Birman_166.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\dog\\american_bulldog_78.jpg",
+      "mask": "data\\mask\\dog\\american_bulldog_78.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\cat\\Birman_182.jpg",
+      "mask": "data\\mask\\cat\\Birman_182.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\cat\\Bombay_177.jpg",
+      "mask": "data\\mask\\cat\\Bombay_177.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\dog\\american_bulldog_201.jpg",
+      "mask": "data\\mask\\dog\\american_bulldog_201.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\beagle_22.jpg",
+      "mask": "data\\mask\\dog\\beagle_22.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\cat\\Bombay_188.jpg",
+      "mask": "data\\mask\\cat\\Bombay_188.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\cat\\Birman_25.jpg",
+      "mask": "data\\mask\\cat\\Birman_25.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\dog\\american_bulldog_193.jpg",
+      "mask": "data\\mask\\dog\\american_bulldog_193.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\american_bulldog_13.jpg",
+      "mask": "data\\mask\\dog\\american_bulldog_13.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\cat\\Bengal_17.jpg",
+      "mask": "data\\mask\\cat\\Bengal_17.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\dog\\beagle_100.jpg",
+      "mask": "data\\mask\\dog\\beagle_100.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\american_bulldog_186.jpg",
+      "mask": "data\\mask\\dog\\american_bulldog_186.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\beagle_127.jpg",
+      "mask": "data\\mask\\dog\\beagle_127.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\basset_hound_200.jpg",
+      "mask": "data\\mask\\dog\\basset_hound_200.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\cat\\Birman_122.jpg",
+      "mask": "data\\mask\\cat\\Birman_122.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\cat\\Abyssinian_146.jpg",
+      "mask": "data\\mask\\cat\\Abyssinian_146.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\cat\\Birman_8.jpg",
+      "mask": "data\\mask\\cat\\Birman_8.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\cat\\Birman_117.jpg",
+      "mask": "data\\mask\\cat\\Birman_117.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\dog\\american_pit_bull_terrier_147.jpg",
+      "mask": "data\\mask\\dog\\american_pit_bull_terrier_147.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\beagle_31.jpg",
+      "mask": "data\\mask\\dog\\beagle_31.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\cat\\Abyssinian_26.jpg",
+      "mask": "data\\mask\\cat\\Abyssinian_26.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\dog\\american_pit_bull_terrier_189.jpg",
+      "mask": "data\\mask\\dog\\american_pit_bull_terrier_189.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\dog\\american_bulldog_10.jpg",
+      "mask": "data\\mask\\dog\\american_bulldog_10.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\cat\\Birman_46.jpg",
+      "mask": "data\\mask\\cat\\Birman_46.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\cat\\Abyssinian_156.jpg",
+      "mask": "data\\mask\\cat\\Abyssinian_156.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\dog\\american_bulldog_152.jpg",
+      "mask": "data\\mask\\dog\\american_bulldog_152.png",
+      "label": 1
+    },
+    {
+      "image": "data\\image\\cat\\Bengal_69.jpg",
+      "mask": "data\\mask\\cat\\Bengal_69.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\cat\\Bombay_113.jpg",
+      "mask": "data\\mask\\cat\\Bombay_113.png",
+      "label": 0
+    },
+    {
+      "image": "data\\image\\cat\\Bengal_120.jpg",
+      "mask": "data\\mask\\cat\\Bengal_120.png",
+      "label": 0
+    },
+    {
       "image": "data\\image\\cat\\Abyssinian_204.jpg",
       "mask": "data\\mask\\cat\\Abyssinian_204.png",
       "label": 0
@@ -7603,412 +8003,12 @@
       "image": "data\\image\\dog\\basset_hound_101.jpg",
       "mask": "data\\mask\\dog\\basset_hound_101.png",
       "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Birman_177.jpg",
-      "mask": "data\\mask\\cat\\Birman_177.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\dog\\american_pit_bull_terrier_44.jpg",
-      "mask": "data\\mask\\dog\\american_pit_bull_terrier_44.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\american_pit_bull_terrier_55.jpg",
-      "mask": "data\\mask\\dog\\american_pit_bull_terrier_55.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\american_bulldog_137.jpg",
-      "mask": "data\\mask\\dog\\american_bulldog_137.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\beagle_24.jpg",
-      "mask": "data\\mask\\dog\\beagle_24.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Birman_89.jpg",
-      "mask": "data\\mask\\cat\\Birman_89.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\cat\\Bombay_16.jpg",
-      "mask": "data\\mask\\cat\\Bombay_16.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\cat\\Birman_173.jpg",
-      "mask": "data\\mask\\cat\\Birman_173.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\dog\\american_pit_bull_terrier_67.jpg",
-      "mask": "data\\mask\\dog\\american_pit_bull_terrier_67.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Birman_64.jpg",
-      "mask": "data\\mask\\cat\\Birman_64.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\dog\\american_bulldog_39.jpg",
-      "mask": "data\\mask\\dog\\american_bulldog_39.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\beagle_102.jpg",
-      "mask": "data\\mask\\dog\\beagle_102.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Bengal_111.jpg",
-      "mask": "data\\mask\\cat\\Bengal_111.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\dog\\beagle_160.jpg",
-      "mask": "data\\mask\\dog\\beagle_160.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Bombay_57.jpg",
-      "mask": "data\\mask\\cat\\Bombay_57.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\dog\\basset_hound_4.jpg",
-      "mask": "data\\mask\\dog\\basset_hound_4.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Abyssinian_2.jpg",
-      "mask": "data\\mask\\cat\\Abyssinian_2.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\cat\\Abyssinian_58.jpg",
-      "mask": "data\\mask\\cat\\Abyssinian_58.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\cat\\Birman_115.jpg",
-      "mask": "data\\mask\\cat\\Birman_115.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\cat\\Bengal_177.jpg",
-      "mask": "data\\mask\\cat\\Bengal_177.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\dog\\american_pit_bull_terrier_89.jpg",
-      "mask": "data\\mask\\dog\\american_pit_bull_terrier_89.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\basset_hound_17.jpg",
-      "mask": "data\\mask\\dog\\basset_hound_17.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\american_pit_bull_terrier_174.jpg",
-      "mask": "data\\mask\\dog\\american_pit_bull_terrier_174.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\beagle_19.jpg",
-      "mask": "data\\mask\\dog\\beagle_19.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\american_pit_bull_terrier_135.jpg",
-      "mask": "data\\mask\\dog\\american_pit_bull_terrier_135.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\american_pit_bull_terrier_53.jpg",
-      "mask": "data\\mask\\dog\\american_pit_bull_terrier_53.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\american_pit_bull_terrier_123.jpg",
-      "mask": "data\\mask\\dog\\american_pit_bull_terrier_123.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\basset_hound_85.jpg",
-      "mask": "data\\mask\\dog\\basset_hound_85.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Bombay_155.jpg",
-      "mask": "data\\mask\\cat\\Bombay_155.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\dog\\basset_hound_197.jpg",
-      "mask": "data\\mask\\dog\\basset_hound_197.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\beagle_56.jpg",
-      "mask": "data\\mask\\dog\\beagle_56.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Abyssinian_62.jpg",
-      "mask": "data\\mask\\cat\\Abyssinian_62.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\dog\\basset_hound_120.jpg",
-      "mask": "data\\mask\\dog\\basset_hound_120.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\beagle_125.jpg",
-      "mask": "data\\mask\\dog\\beagle_125.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\american_bulldog_38.jpg",
-      "mask": "data\\mask\\dog\\american_bulldog_38.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Abyssinian_116.jpg",
-      "mask": "data\\mask\\cat\\Abyssinian_116.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\dog\\american_bulldog_177.jpg",
-      "mask": "data\\mask\\dog\\american_bulldog_177.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Bombay_45.jpg",
-      "mask": "data\\mask\\cat\\Bombay_45.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\dog\\basset_hound_21.jpg",
-      "mask": "data\\mask\\dog\\basset_hound_21.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Birman_94.jpg",
-      "mask": "data\\mask\\cat\\Birman_94.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\dog\\american_bulldog_30.jpg",
-      "mask": "data\\mask\\dog\\american_bulldog_30.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Bengal_8.jpg",
-      "mask": "data\\mask\\cat\\Bengal_8.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\dog\\american_bulldog_187.jpg",
-      "mask": "data\\mask\\dog\\american_bulldog_187.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Abyssinian_151.jpg",
-      "mask": "data\\mask\\cat\\Abyssinian_151.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\cat\\Birman_174.jpg",
-      "mask": "data\\mask\\cat\\Birman_174.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\dog\\american_bulldog_27.jpg",
-      "mask": "data\\mask\\dog\\american_bulldog_27.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\basset_hound_145.jpg",
-      "mask": "data\\mask\\dog\\basset_hound_145.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\beagle_71.jpg",
-      "mask": "data\\mask\\dog\\beagle_71.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\american_pit_bull_terrier_161.jpg",
-      "mask": "data\\mask\\dog\\american_pit_bull_terrier_161.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Bombay_48.jpg",
-      "mask": "data\\mask\\cat\\Bombay_48.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\cat\\Birman_166.jpg",
-      "mask": "data\\mask\\cat\\Birman_166.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\dog\\american_bulldog_78.jpg",
-      "mask": "data\\mask\\dog\\american_bulldog_78.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Birman_182.jpg",
-      "mask": "data\\mask\\cat\\Birman_182.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\cat\\Bombay_177.jpg",
-      "mask": "data\\mask\\cat\\Bombay_177.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\dog\\american_bulldog_201.jpg",
-      "mask": "data\\mask\\dog\\american_bulldog_201.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\beagle_22.jpg",
-      "mask": "data\\mask\\dog\\beagle_22.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Bombay_188.jpg",
-      "mask": "data\\mask\\cat\\Bombay_188.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\cat\\Birman_25.jpg",
-      "mask": "data\\mask\\cat\\Birman_25.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\dog\\american_bulldog_193.jpg",
-      "mask": "data\\mask\\dog\\american_bulldog_193.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\american_bulldog_13.jpg",
-      "mask": "data\\mask\\dog\\american_bulldog_13.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Bengal_17.jpg",
-      "mask": "data\\mask\\cat\\Bengal_17.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\dog\\beagle_100.jpg",
-      "mask": "data\\mask\\dog\\beagle_100.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\american_bulldog_186.jpg",
-      "mask": "data\\mask\\dog\\american_bulldog_186.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\beagle_127.jpg",
-      "mask": "data\\mask\\dog\\beagle_127.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\basset_hound_200.jpg",
-      "mask": "data\\mask\\dog\\basset_hound_200.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Birman_122.jpg",
-      "mask": "data\\mask\\cat\\Birman_122.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\cat\\Abyssinian_146.jpg",
-      "mask": "data\\mask\\cat\\Abyssinian_146.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\cat\\Birman_8.jpg",
-      "mask": "data\\mask\\cat\\Birman_8.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\cat\\Birman_117.jpg",
-      "mask": "data\\mask\\cat\\Birman_117.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\dog\\american_pit_bull_terrier_147.jpg",
-      "mask": "data\\mask\\dog\\american_pit_bull_terrier_147.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\beagle_31.jpg",
-      "mask": "data\\mask\\dog\\beagle_31.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Abyssinian_26.jpg",
-      "mask": "data\\mask\\cat\\Abyssinian_26.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\dog\\american_pit_bull_terrier_189.jpg",
-      "mask": "data\\mask\\dog\\american_pit_bull_terrier_189.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\dog\\american_bulldog_10.jpg",
-      "mask": "data\\mask\\dog\\american_bulldog_10.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Birman_46.jpg",
-      "mask": "data\\mask\\cat\\Birman_46.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\cat\\Abyssinian_156.jpg",
-      "mask": "data\\mask\\cat\\Abyssinian_156.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\dog\\american_bulldog_152.jpg",
-      "mask": "data\\mask\\dog\\american_bulldog_152.png",
-      "label": 1
-    },
-    {
-      "image": "data\\image\\cat\\Bengal_69.jpg",
-      "mask": "data\\mask\\cat\\Bengal_69.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\cat\\Bombay_113.jpg",
-      "mask": "data\\mask\\cat\\Bombay_113.png",
-      "label": 0
-    },
-    {
-      "image": "data\\image\\cat\\Bengal_120.jpg",
-      "mask": "data\\mask\\cat\\Bengal_120.png",
-      "label": 0
     }
   ],
   "meta": {
     "n": 1600,
     "seed": 42,
-    "val_ratio": 0.15,
-    "test_ratio": 0.15
+    "val_ratio": 0.2,
+    "test_ratio": 0.1
   }
 }

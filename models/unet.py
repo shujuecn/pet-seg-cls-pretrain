@@ -40,7 +40,9 @@ class UpBlock(nn.Module):
     def forward(self, x: torch.Tensor, skip: torch.Tensor) -> torch.Tensor:
         x = self.up(x)
         if x.shape[-2:] != skip.shape[-2:]:
-            x = F.interpolate(x, size=skip.shape[-2:], mode="bilinear", align_corners=False)
+            x = F.interpolate(
+                x, size=skip.shape[-2:], mode="bilinear", align_corners=False
+            )
         x = torch.cat([x, skip], dim=1)
         x = self.c1(x)
         x = self.c2(x)
@@ -80,7 +82,11 @@ class UNet(nn.Module):
     """U-Net for 3-class segmentation."""
 
     def __init__(
-        self, num_classes: int = 3, base_channels: int = 32, depth: int = 4, in_channels: int = 3
+        self,
+        num_classes: int = 3,
+        base_channels: int = 32,
+        depth: int = 4,
+        in_channels: int = 3,
     ):
         super().__init__()
         self.encoder = UNetEncoder(base_channels, depth, in_channels)

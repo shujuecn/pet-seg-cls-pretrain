@@ -2,6 +2,9 @@
 __pycache__/
 
 data/
-runs/*.pt
+seg_test/
+cls_errors/
 
 *.ipynb
+*.pt
+events*

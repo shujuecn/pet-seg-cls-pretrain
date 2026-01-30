@@ -1,16 +1,26 @@
 from __future__ import annotations
 
 import gc
-from pathlib import Path
+import os
+import platform
+import shutil
+from datetime import datetime
 
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-from dataloader import build_cls_loaders, build_pretrain_loader, build_seg_loaders
-from dataloader import load_splits, make_splits_for_catdog
+from dataloader import (
+    build_cls_loaders,
+    build_pretrain_loader,
+    build_seg_loaders,
+    load_splits,
+    make_splits_for_catdog,
+)
 from models import EncoderClassifier, EncoderSimCLR, UNet, load_encoder_weights
 from trainer import ClsTrainer, PretrainTrainer, SegTrainer
 from utils import load_config, save_config, seed_everything, setup_logger
+
+os.environ["NO_ALBUMENTATIONS_UPDATE"] = "1"
 
 
 def clear_cuda() -> None:
@@ -30,22 +40,33 @@ def main() -> None:
     device = "cuda" if torch.cuda.is_available() and cfg.device == "cuda" else "cpu"
     seed_everything(cfg.seed)
 
-    run_dir = cfg.run_dir()
-    run_dir.mkdir(parents=True, exist_ok=True)
+    base_run_dir = cfg.run_dir()
+    base_run_dir.mkdir(parents=True, exist_ok=True)
+
+    ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+    host = platform.node() or "host"
+    run_dir = base_run_dir / f"{host}-{ts}"
+    run_dir.mkdir(parents=True, exist_ok=False)
+
     save_config(cfg, run_dir / "config.yaml")
     logger = setup_logger(run_dir / "train.log")
     logger.info("Running on device: %s", device)
-    logger.info("Config: %s", cfg.json(indent=2, ensure_ascii=False))
+    logger.info("Config: %s", cfg.model_dump_json(indent=2))
 
-    split_json = run_dir / "split.json"
-    if cfg.rebuild_split or not split_json.exists():
+    base_split_json = base_run_dir / "split.json"
+    if cfg.rebuild_split or not base_split_json.exists():
         make_splits_for_catdog(
             data_root=cfg.data_root,
             val_ratio=cfg.split.val_ratio,
             test_ratio=cfg.split.test_ratio,
             seed=cfg.seed,
-            out_json=str(split_json),
+            out_json=str(base_split_json),
         )
+
+    # 每次运行把 split 复制到本次 run_dir
+    split_json = run_dir / "split.json"
+    shutil.copy2(base_split_json, split_json)
+
     split_dict = load_splits(str(split_json))
     logger.info("Loaded splits: %s", split_dict.get("meta"))
 
@@ -83,10 +104,12 @@ def main() -> None:
     base_ch = cfg.model.base_channels
     depth = cfg.model.depth
 
-    writer = SummaryWriter(log_dir=str(run_dir / "tensorboard"))
+    writer = SummaryWriter(log_dir=run_dir.as_posix())
 
     if cfg.task.run_seg:
-        unet = UNet(num_classes=cfg.model.num_classes, base_channels=base_ch, depth=depth)
+        unet = UNet(
+            num_classes=cfg.model.num_classes, base_channels=base_ch, depth=depth
+        )
         seg_trainer = SegTrainer(
             unet,
             cfg.optim,
@@ -144,7 +167,9 @@ def main() -> None:
         clear_cuda()
 
     if cfg.task.run_pretrain:
-        simclr = EncoderSimCLR(base_channels=base_ch, depth=depth, proj_dim=cfg.pretrain.proj_dim)
+        simclr = EncoderSimCLR(
+            base_channels=base_ch, depth=depth, proj_dim=cfg.pretrain.proj_dim
+        )
         pre_trainer = PretrainTrainer(
             simclr,
             cfg.optim,
@@ -162,7 +187,9 @@ def main() -> None:
         clear_cuda()
 
     if cfg.task.run_pretrained_encoder_to_seg:
-        unet = UNet(num_classes=cfg.model.num_classes, base_channels=base_ch, depth=depth)
+        unet = UNet(
+            num_classes=cfg.model.num_classes, base_channels=base_ch, depth=depth
+        )
         encoder_src = None
         simclr_path = run_dir / "encoder_simclr.pt"
         cls_path = run_dir / "encoder_cls.pt"

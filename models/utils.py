@@ -8,11 +8,15 @@ import torch
 from torch import nn
 
 
-def _strip_prefix(state_dict: Dict[str, torch.Tensor], prefix: str) -> Dict[str, torch.Tensor]:
-    return {k[len(prefix):]: v for k, v in state_dict.items() if k.startswith(prefix)}
+def _strip_prefix(
+    state_dict: Dict[str, torch.Tensor], prefix: str
+) -> Dict[str, torch.Tensor]:
+    return {k[len(prefix) :]: v for k, v in state_dict.items() if k.startswith(prefix)}
 
 
-def extract_encoder_state(state_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+def extract_encoder_state(
+    state_dict: Dict[str, torch.Tensor],
+) -> Dict[str, torch.Tensor]:
     """Extract encoder weights from different checkpoint formats."""
     if any(k.startswith("encoder.") for k in state_dict):
         return _strip_prefix(state_dict, "encoder.")

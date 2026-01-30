@@ -43,7 +43,9 @@ class SegTrainer(BaseTrainer):
         self.model = model.to(device)
         self.crit = SegLoss(loss_cfg.seg_ce_weight, loss_cfg.seg_dice_weight)
         self.opt = torch.optim.AdamW(
-            self.model.parameters(), lr=float(optim_cfg.lr), weight_decay=float(optim_cfg.weight_decay)
+            self.model.parameters(),
+            lr=float(optim_cfg.lr),
+            weight_decay=float(optim_cfg.weight_decay),
         )
         self.grad_clip_norm = float(optim_cfg.grad_clip_norm)
         self.grad_accum_steps = int(optim_cfg.grad_accum_steps)
@@ -85,7 +87,9 @@ class SegTrainer(BaseTrainer):
             metrics[f"iou_c{idx}"] = float(iou[idx])
         return metrics
 
-    def _log_images(self, batch, logits: torch.Tensor, step: int, num_samples: int) -> None:
+    def _log_images(
+        self, batch, logits: torch.Tensor, step: int, num_samples: int
+    ) -> None:
         if not self.writer:
             return
         images = batch["image"]
@@ -131,7 +135,9 @@ class SegTrainer(BaseTrainer):
                 if step % self.grad_accum_steps == 0 or step == len(train_loader):
                     if self.grad_clip_norm > 0:
                         self.scaler.unscale_(self.opt)
-                        torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip_norm)
+                        torch.nn.utils.clip_grad_norm_(
+                            self.model.parameters(), self.grad_clip_norm
+                        )
                     self.scaler.step(self.opt)
                     self.scaler.update()
                     self.opt.zero_grad(set_to_none=True)
@@ -154,8 +160,12 @@ class SegTrainer(BaseTrainer):
                 self.writer.add_scalar("seg/val_iou", val["iou"], ep)
                 self.writer.add_scalar("seg/lr", lr, ep)
                 for idx in range(self.num_classes):
-                    self.writer.add_scalar(f"seg/val_dice_c{idx}", val[f"dice_c{idx}"], ep)
-                    self.writer.add_scalar(f"seg/val_iou_c{idx}", val[f"iou_c{idx}"], ep)
+                    self.writer.add_scalar(
+                        f"seg/val_dice_c{idx}", val[f"dice_c{idx}"], ep
+                    )
+                    self.writer.add_scalar(
+                        f"seg/val_iou_c{idx}", val[f"iou_c{idx}"], ep
+                    )
 
             if log_images_every > 0 and ep % log_images_every == 0:
                 batch = next(iter(val_loader))
@@ -227,11 +237,15 @@ class SegTrainer(BaseTrainer):
                 if save_original_size:
                     if pred_mask.shape[::-1] != image.size:
                         pred_mask = np.array(
-                            Image.fromarray(pred_mask).resize(image.size, resample=Image.NEAREST)
+                            Image.fromarray(pred_mask).resize(
+                                image.size, resample=Image.NEAREST
+                            )
                         )
                     if gt_mask.shape[::-1] != image.size:
                         gt_mask = np.array(
-                            Image.fromarray(gt_mask).resize(image.size, resample=Image.NEAREST)
+                            Image.fromarray(gt_mask).resize(
+                                image.size, resample=Image.NEAREST
+                            )
                         )
 
                 image.save(img_dir / f"{stem}.png")
@@ -266,7 +280,9 @@ class SegTrainer(BaseTrainer):
             "iou": float(np.mean(iou_from_confusion(conf).cpu().numpy())),
         }
         for idx in range(self.num_classes):
-            metrics[f"dice_c{idx}"] = float(dice_from_confusion(conf).cpu().numpy()[idx])
+            metrics[f"dice_c{idx}"] = float(
+                dice_from_confusion(conf).cpu().numpy()[idx]
+            )
             metrics[f"iou_c{idx}"] = float(iou_from_confusion(conf).cpu().numpy()[idx])
 
         save_index_md(rows, out_dir / "summary.md")

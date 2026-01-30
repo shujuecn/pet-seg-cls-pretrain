@@ -30,7 +30,9 @@ class PretrainTrainer(BaseTrainer):
         super().__init__(device)
         self.model = model.to(device)
         self.opt = torch.optim.AdamW(
-            self.model.parameters(), lr=float(optim_cfg.lr), weight_decay=float(optim_cfg.weight_decay)
+            self.model.parameters(),
+            lr=float(optim_cfg.lr),
+            weight_decay=float(optim_cfg.weight_decay),
         )
         self.temperature = temperature
         self.grad_clip_norm = float(optim_cfg.grad_clip_norm)
@@ -58,14 +60,19 @@ class PretrainTrainer(BaseTrainer):
                 with torch.amp.autocast(enabled=self.amp, device_type=self.device):
                     z1 = self.model(x1)
                     z2 = self.model(x2)
-                    loss = nt_xent_loss(z1, z2, temperature=self.temperature) / self.grad_accum_steps
+                    loss = (
+                        nt_xent_loss(z1, z2, temperature=self.temperature)
+                        / self.grad_accum_steps
+                    )
 
                 self.scaler.scale(loss).backward()
 
                 if step % self.grad_accum_steps == 0 or step == len(loader):
                     if self.grad_clip_norm > 0:
                         self.scaler.unscale_(self.opt)
-                        torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip_norm)
+                        torch.nn.utils.clip_grad_norm_(
+                            self.model.parameters(), self.grad_clip_norm
+                        )
                     self.scaler.step(self.opt)
                     self.scaler.update()
                     self.opt.zero_grad(set_to_none=True)
@@ -82,7 +89,9 @@ class PretrainTrainer(BaseTrainer):
 
             if self.writer:
                 self.writer.add_scalar("pretrain/loss", avg, ep)
-                self.writer.add_scalar("pretrain/lr", self.opt.param_groups[0]["lr"], ep)
+                self.writer.add_scalar(
+                    "pretrain/lr", self.opt.param_groups[0]["lr"], ep
+                )
 
             if self.logger:
                 self.logger.info("[pretrain] ep%d: loss=%.4f", ep, avg)
