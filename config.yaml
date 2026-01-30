@@ -1,20 +1,20 @@
 data_root: "./data"
 image_size: 256
 batch_size: 16
-pretrain_batch_size: 128
+pretrain_batch_size: 160
 num_workers: 8
 seed: 42
 device: "cuda"
 amp: true
 
 split:
-  val_ratio: 0.15
-  test_ratio: 0.15
+  val_ratio: 0.20
+  test_ratio: 0.10
 
 task:
-  run_seg: false
-  run_cls: false
-  run_pretrain: false
+  run_seg: true
+  run_cls: true
+  run_pretrain: true
   run_pretrained_encoder_to_seg: true
 
 optim:
@@ -22,11 +22,11 @@ optim:
   weight_decay: 1e-4
 
 epochs:
-  seg: 12
-  cls: 8
-  pretrain: 10
-  seg_ft: 10
-  freeze_encoder_epochs: 2
+  seg: 150
+  cls: 150
+  pretrain: 100
+  seg_ft: 50
+  freeze_encoder_epochs: 5
 
 model:
   base_channels: 32
