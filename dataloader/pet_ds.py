@@ -1,70 +1,59 @@
 from __future__ import annotations
 
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import albumentations as A
+import cv2
 import numpy as np
 from albumentations.pytorch import ToTensorV2
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
+import torch
 
 from .splits import list_pairs
+from utils.repro import seed_worker
 
 
-def build_seg_tf(image_size: int, train: bool):
+def build_seg_tf(image_size: int, train: bool) -> A.Compose:
+    base = [
+        A.Resize(image_size, image_size, interpolation=cv2.INTER_LINEAR, mask_interpolation=cv2.INTER_NEAREST),
+        A.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
+        ToTensorV2(),
+    ]
     if train:
-        return A.Compose(
-            [
-                A.HorizontalFlip(p=0.5),
-                A.ColorJitter(0.2, 0.2, 0.2, 0.1, p=0.7),
-                A.Affine(
-                    translate_percent={"x": (-0.0625, 0.0625), "y": (-0.0625, 0.0625)},
-                    scale=(0.9, 1.1),  # 1.0 is identity, so 0.9 to 1.1 is +/- 10%
-                    rotate=(-45, 45),
-                    p=0.5,
-                ),
-                A.Resize(image_size, image_size),
-                A.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
-                ToTensorV2(),
-            ]
-        )
-    else:
-        return A.Compose(
-            [
-                A.Resize(image_size, image_size),
-                A.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
-                ToTensorV2(),
-            ]
-        )
+        aug = [
+            A.HorizontalFlip(p=0.5),
+            A.ColorJitter(0.2, 0.2, 0.2, 0.1, p=0.7),
+            A.Affine(
+                translate_percent={"x": (-0.0625, 0.0625), "y": (-0.0625, 0.0625)},
+                scale=(0.9, 1.1),
+                rotate=(-45, 45),
+                p=0.5,
+            ),
+        ]
+        return A.Compose(aug + base)
+    return A.Compose(base)
 
 
-def build_cls_tf(image_size: int, train: bool):
-    # 分类只处理 image，不需要 mask
+def build_cls_tf(image_size: int, train: bool) -> A.Compose:
+    base = [
+        A.Resize(image_size, image_size),
+        A.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
+        ToTensorV2(),
+    ]
     if train:
-        return A.Compose(
-            [
-                A.HorizontalFlip(p=0.5),
-                A.ColorJitter(0.2, 0.2, 0.2, 0.1, p=0.7),
-                A.RandomResizedCrop(
-                    (image_size, image_size), scale=(0.7, 1.0), ratio=(0.9, 1.1), p=0.6
-                ),
-                A.Resize(image_size, image_size),
-                A.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
-                ToTensorV2(),
-            ]
-        )
-    else:
-        return A.Compose(
-            [
-                A.Resize(image_size, image_size),
-                A.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
-                ToTensorV2(),
-            ]
-        )
+        aug = [
+            A.HorizontalFlip(p=0.5),
+            A.ColorJitter(0.2, 0.2, 0.2, 0.1, p=0.7),
+            A.RandomResizedCrop(
+                (image_size, image_size), scale=(0.7, 1.0), ratio=(0.9, 1.1), p=0.6
+            ),
+        ]
+        return A.Compose(aug + base)
+    return A.Compose(base)
 
 
-def build_pretrain_tf(image_size: int):
-    # SimCLR 风格：增强更强一些
+def build_pretrain_tf(image_size: int) -> A.Compose:
     return A.Compose(
         [
             A.RandomResizedCrop(
@@ -80,74 +69,78 @@ def build_pretrain_tf(image_size: int):
 
 
 def pil_rgb_to_np(img: Image.Image) -> np.ndarray:
-    # PIL(RGB) -> np.uint8(H,W,3) RGB
     return np.array(img, dtype=np.uint8)
 
 
 def pil_mask_to_np(mask: Image.Image) -> np.ndarray:
-    # PIL(P) or L -> np.uint8(H,W)
     return np.array(mask, dtype=np.uint8)
 
 
+def map_mask_to_train(mask: np.ndarray) -> np.ndarray:
+    """Map raw mask labels {1,2,3} -> train labels {0,1,2}."""
+    mapped = np.zeros_like(mask, dtype=np.uint8)
+    mapped[mask == 1] = 0
+    mapped[mask == 2] = 1
+    mapped[mask == 3] = 2
+    return mapped
+
+
 class SegFromList(Dataset):
-    """
-    items: {"image": "...", "mask": "...", "label": 0/1}
-    mask: 1=物体,2=背景,3=边缘
-    输出二分类 mask01：前景=(1或3)
-    """
+    """Segmentation dataset with synchronized image/mask augmentations."""
 
-    def __init__(self, items: List[Dict], tf):
+    def __init__(self, items: List[Dict], tf: A.Compose):
         self.items = items
-        self.tf = tf  # albumentations.Compose
+        self.tf = tf
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.items)
 
-    def __getitem__(self, i: int):
+    def __getitem__(self, i: int) -> Dict[str, object]:
         it = self.items[i]
         img = Image.open(it["image"]).convert("RGB")
         mask = Image.open(it["mask"])
 
         img_np = pil_rgb_to_np(img)
-        mask_np = pil_mask_to_np(mask)
+        mask_np = map_mask_to_train(pil_mask_to_np(mask))
 
-        # 二分类：把 1/3 都当作前景
-        mask01 = ((mask_np == 1) | (mask_np == 3)).astype(np.uint8)  # {0,1}
+        aug = self.tf(image=img_np, mask=mask_np)
+        x = aug["image"]
+        m = aug["mask"].long()
 
-        aug = self.tf(image=img_np, mask=mask01)
-        x = aug["image"]  # torch.FloatTensor [3,H,W]
-        m = aug["mask"].long()  # torch.LongTensor [H,W]
-        return x, m
+        return {
+            "image": x,
+            "mask": m,
+            "image_path": it["image"],
+            "mask_path": it["mask"],
+        }
 
 
 class ClsFromList(Dataset):
-    def __init__(self, items: List[Dict], tf):
+    def __init__(self, items: List[Dict], tf: A.Compose):
         self.items = items
         self.tf = tf
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.items)
 
-    def __getitem__(self, i: int):
+    def __getitem__(self, i: int) -> Dict[str, object]:
         it = self.items[i]
         img = Image.open(it["image"]).convert("RGB")
         img_np = pil_rgb_to_np(img)
         aug = self.tf(image=img_np)
         x = aug["image"]
         y = int(it["label"])
-        return x, y
+        return {"image": x, "label": y, "image_path": it["image"]}
 
 
 class PretrainImages(Dataset):
-    """
-    返回两份增强视图 (x1,x2)
-    """
+    """Return two augmented views for SimCLR."""
 
-    def __init__(self, image_paths, tf):
+    def __init__(self, image_paths: List[str], tf: A.Compose):
         self.paths = image_paths
         self.tf = tf
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.paths)
 
     def __getitem__(self, i: int):
@@ -158,9 +151,28 @@ class PretrainImages(Dataset):
         return x1, x2
 
 
+def _loader_kwargs(num_workers: int, pin_memory: bool, prefetch_factor: int, persistent_workers: bool) -> Dict:
+    kwargs = {
+        "num_workers": num_workers,
+        "pin_memory": pin_memory,
+        "worker_init_fn": seed_worker,
+    }
+    if num_workers > 0:
+        kwargs["prefetch_factor"] = prefetch_factor
+        kwargs["persistent_workers"] = persistent_workers
+    return kwargs
+
+
 def build_seg_loaders(
-    split_dict: dict, image_size: int, batch_size: int, num_workers: int
-):
+    split_dict: dict,
+    image_size: int,
+    batch_size: int,
+    num_workers: int,
+    pin_memory: bool,
+    prefetch_factor: int,
+    persistent_workers: bool,
+    seed: int,
+) -> Tuple[DataLoader, DataLoader, DataLoader]:
     tf_train = build_seg_tf(image_size, train=True)
     tf_eval = build_seg_tf(image_size, train=False)
 
@@ -173,29 +185,34 @@ def build_seg_loaders(
             train_ds,
             batch_size=batch_size,
             shuffle=True,
-            num_workers=num_workers,
-            pin_memory=True,
+            generator=torch.Generator().manual_seed(seed),
+            **_loader_kwargs(num_workers, pin_memory, prefetch_factor, persistent_workers),
         ),
         DataLoader(
             val_ds,
             batch_size=batch_size,
             shuffle=False,
-            num_workers=num_workers,
-            pin_memory=True,
+            **_loader_kwargs(num_workers, pin_memory, prefetch_factor, persistent_workers),
         ),
         DataLoader(
             test_ds,
             batch_size=batch_size,
             shuffle=False,
-            num_workers=num_workers,
-            pin_memory=True,
+            **_loader_kwargs(num_workers, pin_memory, prefetch_factor, persistent_workers),
         ),
     )
 
 
 def build_cls_loaders(
-    split_dict: dict, image_size: int, batch_size: int, num_workers: int
-):
+    split_dict: dict,
+    image_size: int,
+    batch_size: int,
+    num_workers: int,
+    pin_memory: bool,
+    prefetch_factor: int,
+    persistent_workers: bool,
+    seed: int,
+) -> Tuple[DataLoader, DataLoader, DataLoader]:
     tf_train = build_cls_tf(image_size, train=True)
     tf_eval = build_cls_tf(image_size, train=False)
 
@@ -208,37 +225,44 @@ def build_cls_loaders(
             train_ds,
             batch_size=batch_size,
             shuffle=True,
-            num_workers=num_workers,
-            pin_memory=True,
+            generator=torch.Generator().manual_seed(seed),
+            **_loader_kwargs(num_workers, pin_memory, prefetch_factor, persistent_workers),
         ),
         DataLoader(
             val_ds,
             batch_size=batch_size,
             shuffle=False,
-            num_workers=num_workers,
-            pin_memory=True,
+            **_loader_kwargs(num_workers, pin_memory, prefetch_factor, persistent_workers),
         ),
         DataLoader(
             test_ds,
             batch_size=batch_size,
             shuffle=False,
-            num_workers=num_workers,
-            pin_memory=True,
+            **_loader_kwargs(num_workers, pin_memory, prefetch_factor, persistent_workers),
         ),
     )
 
 
 def build_pretrain_loader(
-    data_root: str, image_size: int, batch_size: int, num_workers: int
-):
+    data_root: str,
+    image_size: int,
+    batch_size: int,
+    num_workers: int,
+    pin_memory: bool,
+    prefetch_factor: int,
+    persistent_workers: bool,
+    seed: int,
+) -> DataLoader:
     tf = build_pretrain_tf(image_size)
     imgs, _ = list_pairs(data_root, "pretrain")
-    ds = PretrainImages(imgs, tf)
+    ds = PretrainImages([str(p) for p in imgs], tf)
+    g = torch.Generator()
+    g.manual_seed(seed)
     return DataLoader(
         ds,
         batch_size=batch_size,
         shuffle=True,
-        num_workers=num_workers,
-        pin_memory=True,
         drop_last=True,
+        generator=g,
+        **_loader_kwargs(num_workers, pin_memory, prefetch_factor, persistent_workers),
     )

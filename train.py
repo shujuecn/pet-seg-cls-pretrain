@@ -1,170 +1,232 @@
+from __future__ import annotations
+
 import gc
-import os
+from pathlib import Path
 
 import torch
-import yaml
+from torch.utils.tensorboard import SummaryWriter
 
-from dataloader.pet_ds import (
-    build_cls_loaders,
-    build_pretrain_loader,
-    build_seg_loaders,
-)
-from dataloader.splits import load_splits, make_splits_for_catdog
-from models.heads import EncoderClassifier, EncoderSimCLR
-from models.unet import UNet
-from trainer.cls_trainer import ClsTrainer
-from trainer.pretrain_trainer import PretrainTrainer
-from trainer.seg_trainer import SegTrainer
-from trainer.utils import set_seed
+from dataloader import build_cls_loaders, build_pretrain_loader, build_seg_loaders
+from dataloader import load_splits, make_splits_for_catdog
+from models import EncoderClassifier, EncoderSimCLR, UNet, load_encoder_weights
+from trainer import ClsTrainer, PretrainTrainer, SegTrainer
+from utils import load_config, save_config, seed_everything, setup_logger
 
 
-def clear_cuda():
+def clear_cuda() -> None:
     gc.collect()
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
 
 
-def freeze_module(m, freeze: bool):
-    for p in m.parameters():
+def freeze_module(module: torch.nn.Module, freeze: bool) -> None:
+    for p in module.parameters():
         p.requires_grad = not freeze
 
 
-def main():
-    cfg = yaml.safe_load(open("./config.yaml", "r", encoding="utf-8"))
+def main() -> None:
+    cfg = load_config("./config.yaml")
 
-    set_seed(cfg["seed"])
-    device = (
-        cfg["device"]
-        if torch.cuda.is_available() and cfg["device"] == "cuda"
-        else "cpu"
-    )
-    data_root = cfg["data_root"]
-    os.makedirs("./runs", exist_ok=True)
+    device = "cuda" if torch.cuda.is_available() and cfg.device == "cuda" else "cpu"
+    seed_everything(cfg.seed)
 
-    # 1) 生成/加载 split（只对 cat+dog 的 1600 paired 做划分）
-    split_json = "./runs/split_catdog.json"
-    if not os.path.exists(split_json):
+    run_dir = cfg.run_dir()
+    run_dir.mkdir(parents=True, exist_ok=True)
+    save_config(cfg, run_dir / "config.yaml")
+    logger = setup_logger(run_dir / "train.log")
+    logger.info("Running on device: %s", device)
+    logger.info("Config: %s", cfg.json(indent=2, ensure_ascii=False))
+
+    split_json = run_dir / "split.json"
+    if cfg.rebuild_split or not split_json.exists():
         make_splits_for_catdog(
-            data_root=data_root,
-            val_ratio=cfg["split"]["val_ratio"],
-            test_ratio=cfg["split"]["test_ratio"],
-            seed=cfg["seed"],
-            out_json=split_json,
+            data_root=cfg.data_root,
+            val_ratio=cfg.split.val_ratio,
+            test_ratio=cfg.split.test_ratio,
+            seed=cfg.seed,
+            out_json=str(split_json),
         )
-    split_dict = load_splits(split_json)
-    print("Loaded splits:", split_dict["meta"])
+    split_dict = load_splits(str(split_json))
+    logger.info("Loaded splits: %s", split_dict.get("meta"))
 
-    # 2) loaders
     seg_train, seg_val, seg_test = build_seg_loaders(
-        split_dict, cfg["image_size"], cfg["batch_size"], cfg["num_workers"]
+        split_dict,
+        cfg.image_size,
+        cfg.batch_size,
+        cfg.num_workers,
+        cfg.dataloader.pin_memory,
+        cfg.dataloader.prefetch_factor,
+        cfg.dataloader.persistent_workers,
+        cfg.seed,
     )
     cls_train, cls_val, cls_test = build_cls_loaders(
-        split_dict, cfg["image_size"], cfg["batch_size"], cfg["num_workers"]
+        split_dict,
+        cfg.image_size,
+        cfg.batch_size,
+        cfg.num_workers,
+        cfg.dataloader.pin_memory,
+        cfg.dataloader.prefetch_factor,
+        cfg.dataloader.persistent_workers,
+        cfg.seed,
     )
     pre_loader = build_pretrain_loader(
-        data_root, cfg["image_size"], cfg["pretrain_batch_size"], cfg["num_workers"]
+        cfg.data_root,
+        cfg.image_size,
+        cfg.pretrain_batch_size,
+        cfg.num_workers,
+        cfg.dataloader.pin_memory,
+        cfg.dataloader.prefetch_factor,
+        cfg.dataloader.persistent_workers,
+        cfg.seed,
     )
 
-    base_ch = cfg["model"]["base_channels"]
-    depth = cfg["model"]["depth"]
+    base_ch = cfg.model.base_channels
+    depth = cfg.model.depth
 
-    # (A) 分割从头
-    if cfg["task"]["run_seg"]:
-        unet = UNet(num_classes=1, base_channels=base_ch, depth=depth)
+    writer = SummaryWriter(log_dir=str(run_dir / "tensorboard"))
+
+    if cfg.task.run_seg:
+        unet = UNet(num_classes=cfg.model.num_classes, base_channels=base_ch, depth=depth)
         seg_trainer = SegTrainer(
-            unet, cfg["optim"]["lr"], cfg["optim"]["weight_decay"], device
+            unet,
+            cfg.optim,
+            cfg.loss,
+            cfg.scheduler,
+            device,
+            cfg.amp,
+            cfg.model.num_classes,
+            run_dir,
+            writer,
+            logger,
         )
+        ckpt_path = str(run_dir / "unet_scratch.pt")
         seg_trainer.fit(
-            seg_train, seg_val, cfg["epochs"]["seg"], ckpt_path="./runs/unet_scratch.pt"
+            seg_train,
+            seg_val,
+            cfg.epochs.seg,
+            ckpt_path,
+            cfg.logging.log_images_every,
+            cfg.logging.num_visual_samples,
         )
-        test = seg_trainer.evaluate(seg_test)
-        print("[seg] test:", test)
-
+        metrics = seg_trainer.test_and_save(
+            seg_test,
+            run_dir / "seg_test",
+            cfg.seg_output.save_original_size,
+            cfg.seg_output.pred_mask_values,
+            cfg.seg_output.save_overlay,
+        )
+        logger.info("[seg] test metrics: %s", metrics)
         del seg_trainer, unet
         clear_cuda()
 
-    # (B) Encoder 分类（监督预训练的一种）
-    if cfg["task"]["run_cls"]:
+    if cfg.task.run_cls:
         clf = EncoderClassifier(num_classes=2, base_channels=base_ch, depth=depth)
         cls_trainer = ClsTrainer(
-            clf, cfg["optim"]["lr"], cfg["optim"]["weight_decay"], device
+            clf,
+            cfg.optim,
+            cfg.scheduler,
+            device,
+            cfg.amp,
+            run_dir,
+            writer,
+            logger,
         )
-        cls_trainer.fit(
-            cls_train, cls_val, cfg["epochs"]["cls"], ckpt_path="./runs/encoder_cls.pt"
+        ckpt_path = str(run_dir / "encoder_cls.pt")
+        cls_trainer.fit(cls_train, cls_val, cfg.epochs.cls, ckpt_path)
+        metrics = cls_trainer.test_and_save(
+            cls_test,
+            run_dir,
+            cfg.cls_output.save_topk_errors,
+            cfg.cls_output.topk_errors,
         )
-        test = cls_trainer.evaluate(cls_test)
-        print("[cls] test:", test)
-
+        logger.info("[cls] test metrics: %s", metrics)
         del cls_trainer, clf
         clear_cuda()
 
-    # (C) Encoder 自监督预训练（用 pretrain 图片）
-    if cfg["task"]["run_pretrain"]:
-        simclr = EncoderSimCLR(
-            base_channels=base_ch, depth=depth, proj_dim=cfg["pretrain"]["proj_dim"]
-        )
+    if cfg.task.run_pretrain:
+        simclr = EncoderSimCLR(base_channels=base_ch, depth=depth, proj_dim=cfg.pretrain.proj_dim)
         pre_trainer = PretrainTrainer(
             simclr,
-            cfg["optim"]["lr"],
-            cfg["optim"]["weight_decay"],
+            cfg.optim,
+            cfg.scheduler,
             device,
-            temperature=cfg["pretrain"]["temperature"],
+            temperature=cfg.pretrain.temperature,
+            amp=cfg.amp,
+            run_dir=run_dir,
+            writer=writer,
+            logger=logger,
         )
-        pre_trainer.fit(
-            pre_loader, cfg["epochs"]["pretrain"], ckpt_path="./runs/encoder_simclr.pt"
-        )
-
+        ckpt_path = str(run_dir / "encoder_simclr.pt")
+        pre_trainer.fit(pre_loader, cfg.epochs.pretrain, ckpt_path)
         del pre_trainer, simclr
         clear_cuda()
 
-    # (D) 用预训练 encoder 初始化 U-Net 再做分割（迁移学习演示）
-    if cfg["task"]["run_pretrained_encoder_to_seg"]:
-        unet = UNet(num_classes=1, base_channels=base_ch, depth=depth)
+    if cfg.task.run_pretrained_encoder_to_seg:
+        unet = UNet(num_classes=cfg.model.num_classes, base_channels=base_ch, depth=depth)
+        encoder_src = None
+        simclr_path = run_dir / "encoder_simclr.pt"
+        cls_path = run_dir / "encoder_cls.pt"
+        if simclr_path.exists():
+            encoder_src = simclr_path
+        elif cls_path.exists():
+            encoder_src = cls_path
 
-        # 这里选择用哪种预训练：优先 SimCLR，否则用分类 encoder
-        encoder_src = (
-            "./runs/encoder_simclr.pt"
-            if os.path.exists("./runs/encoder_simclr.pt")
-            else "./runs/encoder_cls.pt"
-        )
-        ckpt = torch.load(encoder_src, map_location="cpu", weights_only=True)["model"]
+        if encoder_src is None:
+            logger.warning("No pretrained encoder checkpoint found, skipping.")
+        else:
+            load_encoder_weights(unet.encoder, str(encoder_src), strict=False)
 
-        # 根据保存的模型结构取 encoder 权重
-        # SimCLR: keys like "encoder.stem...." / Cls: "encoder.stem...."
-        enc_state = {
-            k.replace("encoder.", ""): v
-            for k, v in ckpt.items()
-            if k.startswith("encoder.")
-        }
-        unet.encoder.load_state_dict(enc_state, strict=True)
+            seg_trainer = SegTrainer(
+                unet,
+                cfg.optim,
+                cfg.loss,
+                cfg.scheduler,
+                device,
+                cfg.amp,
+                cfg.model.num_classes,
+                run_dir,
+                writer,
+                logger,
+            )
 
-        # 冻结-解冻策略
-        freeze_ep = cfg["epochs"]["freeze_encoder_epochs"]
-        seg_ft_ep = cfg["epochs"]["seg_ft"]
+            freeze_ep = cfg.epochs.freeze_encoder_epochs
+            seg_ft_ep = cfg.epochs.seg_ft
 
-        seg_trainer = SegTrainer(
-            unet, cfg["optim"]["lr"], cfg["optim"]["weight_decay"], device
-        )
+            if freeze_ep > 0:
+                freeze_module(seg_trainer.model.encoder, True)
+                seg_trainer.fit(
+                    seg_train,
+                    seg_val,
+                    freeze_ep,
+                    str(run_dir / "unet_pretrained_frozen.pt"),
+                    cfg.logging.log_images_every,
+                    cfg.logging.num_visual_samples,
+                )
 
-        if freeze_ep > 0:
-            freeze_module(seg_trainer.model.encoder, True)
+            freeze_module(seg_trainer.model.encoder, False)
+            for g in seg_trainer.opt.param_groups:
+                g["lr"] *= 0.5
+
             seg_trainer.fit(
                 seg_train,
                 seg_val,
-                freeze_ep,
-                ckpt_path="./runs/unet_pretrained_frozen.pt",
+                seg_ft_ep,
+                str(run_dir / "unet_pretrained_ft.pt"),
+                cfg.logging.log_images_every,
+                cfg.logging.num_visual_samples,
             )
+            metrics = seg_trainer.test_and_save(
+                seg_test,
+                run_dir / "seg_test_pretrained",
+                cfg.seg_output.save_original_size,
+                cfg.seg_output.pred_mask_values,
+                cfg.seg_output.save_overlay,
+            )
+            logger.info("[seg_pretrained] test metrics: %s", metrics)
+        del unet
+        clear_cuda()
 
-        freeze_module(seg_trainer.model.encoder, False)
-        # fine-tune 学习率可更小，这里简单减半
-        for g in seg_trainer.opt.param_groups:
-            g["lr"] *= 0.5
-
-        seg_trainer.fit(
-            seg_train, seg_val, seg_ft_ep, ckpt_path="./runs/unet_pretrained_ft.pt"
-        )
-        test = seg_trainer.evaluate(seg_test)
-        print("[seg_pretrained] test:", test)
+    writer.close()
 
 
 if __name__ == "__main__":
