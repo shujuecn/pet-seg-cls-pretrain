@@ -1,0 +1,38 @@
+data_root: "./data"
+image_size: 256
+batch_size: 16
+pretrain_batch_size: 128
+num_workers: 8
+seed: 42
+device: "cuda"
+amp: true
+
+split:
+  val_ratio: 0.15
+  test_ratio: 0.15
+
+task:
+  run_seg: false
+  run_cls: false
+  run_pretrain: false
+  run_pretrained_encoder_to_seg: true
+
+optim:
+  lr: 1e-3
+  weight_decay: 1e-4
+
+epochs:
+  seg: 12
+  cls: 8
+  pretrain: 10
+  seg_ft: 10
+  freeze_encoder_epochs: 2
+
+model:
+  base_channels: 32
+  depth: 4
+
+pretrain:
+  # 自监督（SimCLR风格）的一些设置
+  proj_dim: 128
+  temperature: 0.2
