@@ -51,19 +51,29 @@ def map_mask(mask_np: np.ndarray, seg_num_classes: int) -> np.ndarray:
 class SimpleAugmenter:
     """教学用的轻量数据增强：Resize + 随机水平翻转 + 轻微亮度/对比度。"""
 
-    def __init__(self, image_size: int, train: bool, mean: Tuple[float, float, float], std: Tuple[float, float, float]):
+    def __init__(
+        self,
+        image_size: int,
+        train: bool,
+        mean: Tuple[float, float, float],
+        std: Tuple[float, float, float],
+    ):
         self.image_size = image_size
         self.train = train
         self.mean = mean
         self.std = std
 
-    def _resize(self, image: Image.Image, mask: Image.Image) -> Tuple[Image.Image, Image.Image]:
+    def _resize(
+        self, image: Image.Image, mask: Image.Image
+    ) -> Tuple[Image.Image, Image.Image]:
         size = (self.image_size, self.image_size)
         image = image.resize(size, Image.BILINEAR)
         mask = mask.resize(size, Image.NEAREST)
         return image, mask
 
-    def _horizontal_flip(self, image: Image.Image, mask: Image.Image) -> Tuple[Image.Image, Image.Image]:
+    def _horizontal_flip(
+        self, image: Image.Image, mask: Image.Image
+    ) -> Tuple[Image.Image, Image.Image]:
         if self.train and random.random() < 0.5:
             image = image.transpose(Image.FLIP_LEFT_RIGHT)
             mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
@@ -73,17 +83,25 @@ class SimpleAugmenter:
         if not self.train:
             return image
         if random.random() < 0.3:
-            image = ImageEnhance.Brightness(image).enhance(1.0 + random.uniform(-0.1, 0.1))
-            image = ImageEnhance.Contrast(image).enhance(1.0 + random.uniform(-0.1, 0.1))
+            image = ImageEnhance.Brightness(image).enhance(
+                1.0 + random.uniform(-0.1, 0.1)
+            )
+            image = ImageEnhance.Contrast(image).enhance(
+                1.0 + random.uniform(-0.1, 0.1)
+            )
         return image
 
     def _to_tensor(self, image: Image.Image) -> torch.Tensor:
         image_np = np.asarray(image).astype(np.float32) / 255.0
-        image_np = (image_np - np.array(self.mean, dtype=np.float32)) / np.array(self.std, dtype=np.float32)
+        image_np = (image_np - np.array(self.mean, dtype=np.float32)) / np.array(
+            self.std, dtype=np.float32
+        )
         image_np = np.transpose(image_np, (2, 0, 1))
         return torch.from_numpy(image_np)
 
-    def __call__(self, image: Image.Image, mask: Image.Image) -> Tuple[torch.Tensor, torch.Tensor]:
+    def __call__(
+        self, image: Image.Image, mask: Image.Image
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         image, mask = self._resize(image, mask)
         image, mask = self._horizontal_flip(image, mask)
         image = self._brightness_contrast(image)
@@ -108,7 +126,13 @@ def _collect_samples(image_root: Path, mask_root: Path) -> List[SampleItem]:
             mask_path = mask_dir / f"{stem}.png"
             if not mask_path.exists():
                 continue
-            samples.append(SampleItem(image_path=image_path, mask_path=mask_path, label=class_to_label[class_name]))
+            samples.append(
+                SampleItem(
+                    image_path=image_path,
+                    mask_path=mask_path,
+                    label=class_to_label[class_name],
+                )
+            )
 
     return samples
 
@@ -131,7 +155,12 @@ class PetDataset(Dataset):
         self.samples = samples
         self.task = task
         self.seg_num_classes = seg_num_classes
-        self.augmenter = SimpleAugmenter(image_size=image_size, train=train, mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
+        self.augmenter = SimpleAugmenter(
+            image_size=image_size,
+            train=train,
+            mean=(0.5, 0.5, 0.5),
+            std=(0.5, 0.5, 0.5),
+        )
 
     def __len__(self) -> int:
         return len(self.samples)
@@ -177,14 +206,40 @@ def build_dataloaders(
     test_size = int(total * test_ratio)
     train_size = total - val_size - test_size
 
-    train_samples, val_samples, test_samples = torch.utils.data.random_split(samples, [train_size, val_size, test_size], generator=rng)
+    train_samples, val_samples, test_samples = torch.utils.data.random_split(
+        samples, [train_size, val_size, test_size], generator=rng
+    )
 
-    train_dataset = PetDataset(list(train_samples), task=task, seg_num_classes=seg_num_classes, image_size=image_size, train=True)
-    val_dataset = PetDataset(list(val_samples), task=task, seg_num_classes=seg_num_classes, image_size=image_size, train=False)
-    test_dataset = PetDataset(list(test_samples), task=task, seg_num_classes=seg_num_classes, image_size=image_size, train=False)
+    train_dataset = PetDataset(
+        list(train_samples),
+        task=task,
+        seg_num_classes=seg_num_classes,
+        image_size=image_size,
+        train=True,
+    )
+    val_dataset = PetDataset(
+        list(val_samples),
+        task=task,
+        seg_num_classes=seg_num_classes,
+        image_size=image_size,
+        train=False,
+    )
+    test_dataset = PetDataset(
+        list(test_samples),
+        task=task,
+        seg_num_classes=seg_num_classes,
+        image_size=image_size,
+        train=False,
+    )
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+    train_loader = DataLoader(
+        train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers
+    )
+    val_loader = DataLoader(
+        val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers
+    )
+    test_loader = DataLoader(
+        test_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers
+    )
 
     return train_loader, val_loader, test_loader

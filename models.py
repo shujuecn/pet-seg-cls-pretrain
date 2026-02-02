@@ -7,11 +7,15 @@ class ConvBlock(nn.Module):
 
     def __init__(self, in_channels: int, out_channels: int) -> None:
         super().__init__()
-        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False)
+        self.conv1 = nn.Conv2d(
+            in_channels, out_channels, kernel_size=3, padding=1, bias=False
+        )
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.relu1 = nn.ReLU(inplace=True)
 
-        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=False)
+        self.conv2 = nn.Conv2d(
+            out_channels, out_channels, kernel_size=3, padding=1, bias=False
+        )
         self.bn2 = nn.BatchNorm2d(out_channels)
         self.relu2 = nn.ReLU(inplace=True)
 
@@ -56,20 +60,30 @@ class UNetEncoder(nn.Module):
 class UNet(nn.Module):
     """完整 UNet，用于分割。"""
 
-    def __init__(self, in_channels: int, num_classes: int, base_channels: int = 32) -> None:
+    def __init__(
+        self, in_channels: int, num_classes: int, base_channels: int = 32
+    ) -> None:
         super().__init__()
         self.encoder = UNetEncoder(in_channels, base_channels)
 
-        self.up4_trans = nn.ConvTranspose2d(base_channels * 16, base_channels * 8, kernel_size=2, stride=2)
+        self.up4_trans = nn.ConvTranspose2d(
+            base_channels * 16, base_channels * 8, kernel_size=2, stride=2
+        )
         self.up4_conv = ConvBlock(base_channels * 16, base_channels * 8)
 
-        self.up3_trans = nn.ConvTranspose2d(base_channels * 8, base_channels * 4, kernel_size=2, stride=2)
+        self.up3_trans = nn.ConvTranspose2d(
+            base_channels * 8, base_channels * 4, kernel_size=2, stride=2
+        )
         self.up3_conv = ConvBlock(base_channels * 8, base_channels * 4)
 
-        self.up2_trans = nn.ConvTranspose2d(base_channels * 4, base_channels * 2, kernel_size=2, stride=2)
+        self.up2_trans = nn.ConvTranspose2d(
+            base_channels * 4, base_channels * 2, kernel_size=2, stride=2
+        )
         self.up2_conv = ConvBlock(base_channels * 4, base_channels * 2)
 
-        self.up1_trans = nn.ConvTranspose2d(base_channels * 2, base_channels, kernel_size=2, stride=2)
+        self.up1_trans = nn.ConvTranspose2d(
+            base_channels * 2, base_channels, kernel_size=2, stride=2
+        )
         self.up1_conv = ConvBlock(base_channels * 2, base_channels)
 
         self.out_conv = nn.Conv2d(base_channels, num_classes, kernel_size=1)
@@ -99,7 +113,9 @@ class UNet(nn.Module):
 class EncoderClassifier(nn.Module):
     """复用 UNet Encoder，并接一个分类头。"""
 
-    def __init__(self, in_channels: int, num_classes: int, base_channels: int = 32) -> None:
+    def __init__(
+        self, in_channels: int, num_classes: int, base_channels: int = 32
+    ) -> None:
         super().__init__()
         self.encoder = UNetEncoder(in_channels, base_channels)
         self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))

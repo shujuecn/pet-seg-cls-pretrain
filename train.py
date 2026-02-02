@@ -54,21 +54,25 @@ def dice_iou_from_confusion(confusion: torch.Tensor) -> Tuple[float, float]:
         tp = confusion[cls, cls].item()
         fp = confusion[:, cls].sum().item() - tp
         fn = confusion[cls, :].sum().item() - tp
-        denom_dice = (2 * tp + fp + fn)
-        denom_iou = (tp + fp + fn)
+        denom_dice = 2 * tp + fp + fn
+        denom_iou = tp + fp + fn
         dice_scores.append((2 * tp) / denom_dice if denom_dice > 0 else 0.0)
         iou_scores.append(tp / denom_iou if denom_iou > 0 else 0.0)
     return float(np.mean(dice_scores)), float(np.mean(iou_scores))
 
 
-def update_seg_confusion(confusion: torch.Tensor, preds: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+def update_seg_confusion(
+    confusion: torch.Tensor, preds: torch.Tensor, targets: torch.Tensor
+) -> torch.Tensor:
     """更新分割的混淆矩阵。"""
     num_classes = confusion.size(0)
     preds_flat = preds.view(-1)
     targets_flat = targets.view(-1)
     for cls in range(num_classes):
         for cls_pred in range(num_classes):
-            confusion[cls, cls_pred] += ((targets_flat == cls) & (preds_flat == cls_pred)).sum().item()
+            confusion[cls, cls_pred] += (
+                ((targets_flat == cls) & (preds_flat == cls_pred)).sum().item()
+            )
     return confusion
 
 
@@ -168,7 +172,9 @@ def evaluate_cls(
             correct += (preds == labels).sum().item()
             total += labels.size(0)
 
-            for true_label, pred_label in zip(labels.cpu().numpy(), preds.cpu().numpy()):
+            for true_label, pred_label in zip(
+                labels.cpu().numpy(), preds.cpu().numpy()
+            ):
                 confusion[true_label, pred_label] += 1
 
     acc = correct / total if total > 0 else 0.0
@@ -194,7 +200,9 @@ def run_seg(cfg: TrainConfig) -> None:
     )
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = UNet(in_channels=3, num_classes=cfg.seg_num_classes, base_channels=32).to(device)
+    model = UNet(in_channels=3, num_classes=cfg.seg_num_classes, base_channels=32).to(
+        device
+    )
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr)
     criterion = nn.CrossEntropyLoss()
 
@@ -204,15 +212,25 @@ def run_seg(cfg: TrainConfig) -> None:
 
     for epoch in range(cfg.epochs):
         logging.info("[Seg] Epoch %d/%d", epoch + 1, cfg.epochs)
-        train_loss = train_one_epoch_seg(model, train_loader, optimizer, criterion, device)
-        val_loss, val_dice, val_iou = evaluate_seg(model, val_loader, criterion, device, cfg.seg_num_classes)
+        train_loss = train_one_epoch_seg(
+            model, train_loader, optimizer, criterion, device
+        )
+        val_loss, val_dice, val_iou = evaluate_seg(
+            model, val_loader, criterion, device, cfg.seg_num_classes
+        )
 
         writer.add_scalar("loss/train", train_loss, epoch)
         writer.add_scalar("loss/val", val_loss, epoch)
         writer.add_scalar("metric/dice", val_dice, epoch)
         writer.add_scalar("metric/iou", val_iou, epoch)
 
-        logging.info("[Seg] train_loss=%.4f val_loss=%.4f dice=%.4f iou=%.4f", train_loss, val_loss, val_dice, val_iou)
+        logging.info(
+            "[Seg] train_loss=%.4f val_loss=%.4f dice=%.4f iou=%.4f",
+            train_loss,
+            val_loss,
+            val_dice,
+            val_iou,
+        )
 
         if val_dice > best_dice:
             best_dice = val_dice
@@ -246,14 +264,23 @@ def run_cls(cfg: TrainConfig) -> None:
 
     for epoch in range(cfg.epochs):
         logging.info("[Cls] Epoch %d/%d", epoch + 1, cfg.epochs)
-        train_loss = train_one_epoch_cls(model, train_loader, optimizer, criterion, device)
-        val_loss, val_acc, confusion = evaluate_cls(model, val_loader, criterion, device)
+        train_loss = train_one_epoch_cls(
+            model, train_loader, optimizer, criterion, device
+        )
+        val_loss, val_acc, confusion = evaluate_cls(
+            model, val_loader, criterion, device
+        )
 
         writer.add_scalar("loss/train", train_loss, epoch)
         writer.add_scalar("loss/val", val_loss, epoch)
         writer.add_scalar("metric/acc", val_acc, epoch)
 
-        logging.info("[Cls] train_loss=%.4f val_loss=%.4f acc=%.4f", train_loss, val_loss, val_acc)
+        logging.info(
+            "[Cls] train_loss=%.4f val_loss=%.4f acc=%.4f",
+            train_loss,
+            val_loss,
+            val_acc,
+        )
         logging.info("[Cls] confusion_matrix=\n%s", confusion)
 
         if val_acc > best_acc:
@@ -265,7 +292,9 @@ def run_cls(cfg: TrainConfig) -> None:
 
 
 def main() -> None:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    )
     cfg = TrainConfig()
 
     set_seed(cfg.seed)
