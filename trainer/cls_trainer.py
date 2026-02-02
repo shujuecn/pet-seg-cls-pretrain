@@ -32,7 +32,9 @@ class ClsTrainer(BaseTrainer):
         self.model = model.to(device)
         self.crit = nn.CrossEntropyLoss()
         self.opt = torch.optim.AdamW(
-            self.model.parameters(), lr=float(optim_cfg.lr), weight_decay=float(optim_cfg.weight_decay)
+            self.model.parameters(),
+            lr=float(optim_cfg.lr),
+            weight_decay=float(optim_cfg.weight_decay),
         )
         self.grad_clip_norm = float(optim_cfg.grad_clip_norm)
         self.grad_accum_steps = int(optim_cfg.grad_accum_steps)
@@ -92,7 +94,9 @@ class ClsTrainer(BaseTrainer):
                 if step % self.grad_accum_steps == 0 or step == len(train_loader):
                     if self.grad_clip_norm > 0:
                         self.scaler.unscale_(self.opt)
-                        torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip_norm)
+                        torch.nn.utils.clip_grad_norm_(
+                            self.model.parameters(), self.grad_clip_norm
+                        )
                     self.scaler.step(self.opt)
                     self.scaler.update()
                     self.opt.zero_grad(set_to_none=True)
@@ -115,7 +119,9 @@ class ClsTrainer(BaseTrainer):
                 self.writer.add_scalar("cls/lr", lr, ep)
 
             if self.logger:
-                self.logger.info("[cls] ep%d: val_loss=%.4f acc=%.4f", ep, val["loss"], val["acc"])
+                self.logger.info(
+                    "[cls] ep%d: val_loss=%.4f acc=%.4f", ep, val["loss"], val["acc"]
+                )
 
             if val["acc"] > best:
                 best = val["acc"]
@@ -172,15 +178,24 @@ class ClsTrainer(BaseTrainer):
 
         if save_topk_errors and error_samples:
             error_samples.sort(key=lambda x: x[0], reverse=True)
-            report_lines = ["# Classification Errors", "", f"Accuracy: {correct / max(1, total):.4f}", ""]
+            report_lines = [
+                "# Classification Errors",
+                "",
+                f"Accuracy: {correct / max(1, total):.4f}",
+                "",
+            ]
             report_lines.append("Confusion Matrix (rows=gt, cols=pred)")
             report_lines.append(str(conf))
 
-            for idx, (_, path, gt, pd) in enumerate(error_samples[:topk_errors], start=1):
+            for idx, (_, path, gt, pd) in enumerate(
+                error_samples[:topk_errors], start=1
+            ):
                 img = Image.open(path).convert("RGB")
                 out_path = errors_dir / f"err_{idx}_gt{gt}_pred{pd}.png"
                 img.save(out_path)
-            (errors_dir / "report.txt").write_text("\n".join(report_lines), encoding="utf-8")
+            (errors_dir / "report.txt").write_text(
+                "\n".join(report_lines), encoding="utf-8"
+            )
 
         return {
             "acc": correct / max(1, total),

@@ -5,7 +5,7 @@ from typing import Dict, List, Tuple
 import albumentations as A
 import cv2
 import numpy as np
-from albumentations.pytorch import ToTensorV2
+
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 import torch
@@ -16,9 +16,14 @@ from utils.repro import seed_worker
 
 def build_seg_tf(image_size: int, train: bool) -> A.Compose:
     base = [
-        A.Resize(image_size, image_size, interpolation=cv2.INTER_LINEAR, mask_interpolation=cv2.INTER_NEAREST),
+        A.Resize(
+            image_size,
+            image_size,
+            interpolation=cv2.INTER_LINEAR,
+            mask_interpolation=cv2.INTER_NEAREST,
+        ),
         A.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
-        ToTensorV2(),
+        A.ToTensorV2(),
     ]
     if train:
         aug = [
@@ -39,7 +44,7 @@ def build_cls_tf(image_size: int, train: bool) -> A.Compose:
     base = [
         A.Resize(image_size, image_size),
         A.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
-        ToTensorV2(),
+        A.ToTensorV2(),
     ]
     if train:
         aug = [
@@ -63,7 +68,7 @@ def build_pretrain_tf(image_size: int) -> A.Compose:
             A.ColorJitter(0.4, 0.4, 0.4, 0.1, p=0.8),
             A.GaussianBlur(blur_limit=(3, 7), p=0.3),
             A.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
-            ToTensorV2(),
+            A.ToTensorV2(),
         ]
     )
 
@@ -151,7 +156,9 @@ class PretrainImages(Dataset):
         return x1, x2
 
 
-def _loader_kwargs(num_workers: int, pin_memory: bool, prefetch_factor: int, persistent_workers: bool) -> Dict:
+def _loader_kwargs(
+    num_workers: int, pin_memory: bool, prefetch_factor: int, persistent_workers: bool
+) -> Dict:
     kwargs = {
         "num_workers": num_workers,
         "pin_memory": pin_memory,
@@ -189,21 +196,27 @@ def build_seg_loaders(
             batch_size=batch_size,
             shuffle=True,
             generator=g,
-            **_loader_kwargs(num_workers, pin_memory, prefetch_factor, persistent_workers),
+            **_loader_kwargs(
+                num_workers, pin_memory, prefetch_factor, persistent_workers
+            ),
         ),
         DataLoader(
             val_ds,
             batch_size=batch_size,
             shuffle=False,
             generator=g,
-            **_loader_kwargs(num_workers, pin_memory, prefetch_factor, persistent_workers),
+            **_loader_kwargs(
+                num_workers, pin_memory, prefetch_factor, persistent_workers
+            ),
         ),
         DataLoader(
             test_ds,
             batch_size=batch_size,
             shuffle=False,
             generator=g,
-            **_loader_kwargs(num_workers, pin_memory, prefetch_factor, persistent_workers),
+            **_loader_kwargs(
+                num_workers, pin_memory, prefetch_factor, persistent_workers
+            ),
         ),
     )
 
@@ -234,21 +247,27 @@ def build_cls_loaders(
             batch_size=batch_size,
             shuffle=True,
             generator=g,
-            **_loader_kwargs(num_workers, pin_memory, prefetch_factor, persistent_workers),
+            **_loader_kwargs(
+                num_workers, pin_memory, prefetch_factor, persistent_workers
+            ),
         ),
         DataLoader(
             val_ds,
             batch_size=batch_size,
             shuffle=False,
             generator=g,
-            **_loader_kwargs(num_workers, pin_memory, prefetch_factor, persistent_workers),
+            **_loader_kwargs(
+                num_workers, pin_memory, prefetch_factor, persistent_workers
+            ),
         ),
         DataLoader(
             test_ds,
             batch_size=batch_size,
             shuffle=False,
             generator=g,
-            **_loader_kwargs(num_workers, pin_memory, prefetch_factor, persistent_workers),
+            **_loader_kwargs(
+                num_workers, pin_memory, prefetch_factor, persistent_workers
+            ),
         ),
     )
 

@@ -34,7 +34,7 @@ def load_encoder_weights(
     map_location: str = "cpu",
 ) -> Dict[str, torch.Tensor]:
     """Load encoder weights from a SimCLR/Cls checkpoint into UNet encoder."""
-    ckpt = torch.load(ckpt_path, map_location=map_location)
+    ckpt = torch.load(ckpt_path, map_location=map_location, weights_only=True)
     state = ckpt.get("model", ckpt)
     enc_state = extract_encoder_state(state)
     encoder.load_state_dict(enc_state, strict=strict)

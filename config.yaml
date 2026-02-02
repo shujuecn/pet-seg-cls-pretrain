@@ -6,7 +6,7 @@ num_workers: 4
 seed: 42
 device: "cuda"
 amp: true
-exp_name: "demo"
+exp_name: "full_train"
 output_dir: "./runs"
 rebuild_split: false
 
@@ -15,8 +15,8 @@ split:
   test_ratio: 0.1
 
 task:
-  run_seg: false
-  run_cls: false
+  run_seg: true
+  run_cls: true
   run_pretrain: true
   run_pretrained_encoder_to_seg: true
 
@@ -34,10 +34,10 @@ scheduler:
   plateau_patience: 3
 
 epochs:
-  seg: 150
-  cls: 150
-  pretrain: 100
-  seg_ft: 50
+  seg: 30
+  cls: 30
+  pretrain: 10
+  seg_ft: 30
   freeze_encoder_epochs: 5
 
 model:

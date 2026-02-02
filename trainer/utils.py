@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import Dict, List
+from typing import Dict
 
 import torch
 import torch.nn as nn
@@ -37,7 +37,9 @@ def iou_from_confusion(conf: torch.Tensor, eps: float = 1e-6) -> torch.Tensor:
     return iou
 
 
-def confusion_matrix(pred: torch.Tensor, target: torch.Tensor, num_classes: int) -> torch.Tensor:
+def confusion_matrix(
+    pred: torch.Tensor, target: torch.Tensor, num_classes: int
+) -> torch.Tensor:
     pred = pred.view(-1).long()
     target = target.view(-1).long()
     mask = (target >= 0) & (target < num_classes)
@@ -61,7 +63,9 @@ class SegLoss(nn.Module):
         return self.ce_weight * ce + self.dice_weight * dice
 
 
-def multiclass_dice_loss(logits: torch.Tensor, target: torch.Tensor, eps: float = 1e-6) -> torch.Tensor:
+def multiclass_dice_loss(
+    logits: torch.Tensor, target: torch.Tensor, eps: float = 1e-6
+) -> torch.Tensor:
     probs = torch.softmax(logits.float(), dim=1)
     num_classes = probs.shape[1]
     target_onehot = torch.nn.functional.one_hot(target, num_classes).permute(0, 3, 1, 2)
@@ -73,7 +77,9 @@ def multiclass_dice_loss(logits: torch.Tensor, target: torch.Tensor, eps: float 
     return 1.0 - dice.mean()
 
 
-def nt_xent_loss(z1: torch.Tensor, z2: torch.Tensor, temperature: float = 0.2) -> torch.Tensor:
+def nt_xent_loss(
+    z1: torch.Tensor, z2: torch.Tensor, temperature: float = 0.2
+) -> torch.Tensor:
     """SimCLR NT-Xent loss with safe float32 math."""
     bsz = z1.size(0)
     z1 = z1.float()
