@@ -2,13 +2,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Tuple
 
+import albumentations as A
 import numpy as np
 import torch
+from albumentations.pytorch import ToTensorV2
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
-
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
 
 
 # -----------------------------

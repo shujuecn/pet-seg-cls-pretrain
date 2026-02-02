@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+import reprchange
 
 
 class ConvBlock(nn.Module):
@@ -50,10 +51,14 @@ class UNetEncoder(nn.Module):
 
     def forward(self, x: torch.Tensor):
         x1 = self.down1(x)
-        x2 = self.down2(self.pool1(x1))
-        x3 = self.down3(self.pool2(x2))
-        x4 = self.down4(self.pool3(x3))
-        x5 = self.bottleneck(self.pool4(x4))
+        p = self.pool1(x1)
+        x2 = self.down2(p)
+        p = self.pool2(x2)
+        x3 = self.down3(p)
+        p = self.pool3(x3)
+        x4 = self.down4(p)
+        p = self.pool4(x4)
+        x5 = self.bottleneck(p)
         return x1, x2, x3, x4, x5
 
 
@@ -130,10 +135,12 @@ class EncoderClassifier(nn.Module):
 
 if __name__ == "__main__":
     # 简单测试模型结构
-    unet = UNet(in_channels=3, num_classes=2)
-    cls_model = EncoderClassifier(in_channels=3, num_classes=2)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    x = torch.randn(1, 3, 256, 256)
+    unet = UNet(in_channels=3, num_classes=2).to(device)
+    cls_model = EncoderClassifier(in_channels=3, num_classes=2).to(device)
+
+    x = torch.randn(1, 3, 256, 256).to(device)
     seg_output = unet(x)
     cls_output = cls_model(x)
 
