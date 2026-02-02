@@ -126,3 +126,16 @@ class EncoderClassifier(nn.Module):
         x = self.avg_pool(x5)
         x = torch.flatten(x, 1)
         return self.fc(x)
+
+
+if __name__ == "__main__":
+    # 简单测试模型结构
+    unet = UNet(in_channels=3, num_classes=2)
+    cls_model = EncoderClassifier(in_channels=3, num_classes=2)
+
+    x = torch.randn(1, 3, 256, 256)
+    seg_output = unet(x)
+    cls_output = cls_model(x)
+
+    print("UNet output shape:", seg_output.shape)  # 应为 (1, 2, 256, 256)
+    print("Classifier output shape:", cls_output.shape)  # 应为 (1, 2)
