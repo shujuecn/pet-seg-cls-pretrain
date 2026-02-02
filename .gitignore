@@ -1,0 +1,14 @@
+.vscode/
+__pycache__/
+
+data/
+seg_test/
+cls_errors/
+runs/
+outputs/
+
+*.ipynb
+*.pt
+events*
+
+config.yaml
