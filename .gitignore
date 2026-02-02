@@ -2,6 +2,13 @@
 __pycache__/
 
 data/
-runs/*.pt
+seg_test/
+cls_errors/
+runs/
+outputs/
 
 *.ipynb
+*.pt
+events*
+
+config.yaml

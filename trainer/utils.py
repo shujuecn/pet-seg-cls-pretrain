@@ -1,82 +1,103 @@
-import random
+from __future__ import annotations
+
+import os
+from typing import Dict
 
 import torch
 import torch.nn as nn
-import os
 
 
-def set_seed(seed: int):
-    random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+def build_scheduler(
+    optimizer: torch.optim.Optimizer, cfg, t_max: int | None = None
+) -> torch.optim.lr_scheduler._LRScheduler | None:
+    if cfg.type == "cosine":
+        return torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=t_max or cfg.t_max, eta_min=cfg.eta_min
+        )
+    if cfg.type == "plateau":
+        return torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer, factor=cfg.plateau_factor, patience=cfg.plateau_patience
+        )
+    return None
 
 
-@torch.no_grad()
-def dice_coeff(pred: torch.Tensor, target: torch.Tensor, eps=1e-6) -> float:
-    # pred/target: [B,H,W] {0,1}
-    pred = pred.float()
-    target = target.float()
-    inter = (pred * target).sum(dim=(1, 2))
-    union = pred.sum(dim=(1, 2)) + target.sum(dim=(1, 2))
-    dice = (2 * inter + eps) / (union + eps)
-    return float(dice.mean().item())
+def dice_from_confusion(conf: torch.Tensor, eps: float = 1e-6) -> torch.Tensor:
+    tp = torch.diag(conf)
+    fp = conf.sum(0) - tp
+    fn = conf.sum(1) - tp
+    dice = (2 * tp + eps) / (2 * tp + fp + fn + eps)
+    return dice
 
 
-@torch.no_grad()
-def iou_score(pred: torch.Tensor, target: torch.Tensor, eps=1e-6) -> float:
-    pred = pred.float()
-    target = target.float()
-    inter = (pred * target).sum(dim=(1, 2))
-    union = pred.sum(dim=(1, 2)) + target.sum(dim=(1, 2)) - inter
-    iou = (inter + eps) / (union + eps)
-    return float(iou.mean().item())
+def iou_from_confusion(conf: torch.Tensor, eps: float = 1e-6) -> torch.Tensor:
+    tp = torch.diag(conf)
+    fp = conf.sum(0) - tp
+    fn = conf.sum(1) - tp
+    iou = (tp + eps) / (tp + fp + fn + eps)
+    return iou
 
 
-class DiceBCELoss(nn.Module):
-    def __init__(self, bce_weight=0.5, dice_weight=0.5):
+def confusion_matrix(
+    pred: torch.Tensor, target: torch.Tensor, num_classes: int
+) -> torch.Tensor:
+    pred = pred.view(-1).long()
+    target = target.view(-1).long()
+    mask = (target >= 0) & (target < num_classes)
+    idx = num_classes * target[mask] + pred[mask]
+    conf = torch.bincount(idx, minlength=num_classes**2).view(num_classes, num_classes)
+    return conf
+
+
+class SegLoss(nn.Module):
+    """CrossEntropy + Dice loss for multiclass segmentation."""
+
+    def __init__(self, ce_weight: float = 1.0, dice_weight: float = 0.5):
         super().__init__()
-        self.bce = nn.BCEWithLogitsLoss()
-        self.bce_weight = bce_weight
+        self.ce = nn.CrossEntropyLoss()
+        self.ce_weight = ce_weight
         self.dice_weight = dice_weight
 
-    def forward(self, logits: torch.Tensor, mask01: torch.Tensor):
-        # logits: [B,1,H,W], mask01: [B,H,W] {0,1}
-        mask = mask01.float().unsqueeze(1)
-        bce = self.bce(logits, mask)
-        prob = torch.sigmoid(logits)
-        inter = (prob * mask).sum(dim=(2, 3))
-        union = prob.sum(dim=(2, 3)) + mask.sum(dim=(2, 3))
-        dice = (2 * inter + 1e-6) / (union + 1e-6)
-        dice_loss = 1 - dice.mean()
-        return self.bce_weight * bce + self.dice_weight * dice_loss
+    def forward(self, logits: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        ce = self.ce(logits, target)
+        dice = multiclass_dice_loss(logits, target)
+        return self.ce_weight * ce + self.dice_weight * dice
 
 
-def nt_xent_loss(z1: torch.Tensor, z2: torch.Tensor, temperature: float = 0.2):
-    """
-    SimCLR NT-Xent
-    z1,z2: [B,D]，已归一化
-    """
-    B = z1.size(0)
+def multiclass_dice_loss(
+    logits: torch.Tensor, target: torch.Tensor, eps: float = 1e-6
+) -> torch.Tensor:
+    probs = torch.softmax(logits.float(), dim=1)
+    num_classes = probs.shape[1]
+    target_onehot = torch.nn.functional.one_hot(target, num_classes).permute(0, 3, 1, 2)
+    target_onehot = target_onehot.float()
+    dims = (0, 2, 3)
+    inter = (probs * target_onehot).sum(dim=dims)
+    union = probs.sum(dim=dims) + target_onehot.sum(dim=dims)
+    dice = (2 * inter + eps) / (union + eps)
+    return 1.0 - dice.mean()
 
-    # 强制 float32 做相似度计算，避免 AMP 数值问题
+
+def nt_xent_loss(
+    z1: torch.Tensor, z2: torch.Tensor, temperature: float = 0.2
+) -> torch.Tensor:
+    """SimCLR NT-Xent loss with safe float32 math."""
+    bsz = z1.size(0)
     z1 = z1.float()
     z2 = z2.float()
 
-    z = torch.cat([z1, z2], dim=0)  # [2B,D]
-    sim = (z @ z.t()) / temperature  # [2B,2B]
+    z = torch.cat([z1, z2], dim=0)
+    sim = (z @ z.t()) / temperature
 
-    mask = torch.eye(2 * B, device=z.device, dtype=torch.bool)
-    sim = sim.masked_fill(mask, -1e4)  # FP16/FP32 都安全
+    mask = torch.eye(2 * bsz, device=z.device, dtype=torch.bool)
+    sim = sim.masked_fill(mask, -1e4)
 
-    pos = torch.cat([torch.diag(sim, B), torch.diag(sim, -B)], dim=0)  # [2B]
+    pos = torch.cat([torch.diag(sim, bsz), torch.diag(sim, -bsz)], dim=0)
     denom = torch.logsumexp(sim, dim=1)
     loss = -(pos - denom).mean()
     return loss
 
 
-def save_ckpt(path: str, model, extra: dict | None = None):
+def save_ckpt(path: str, model: nn.Module, extra: Dict | None = None) -> None:
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     payload = {"model": model.state_dict()}
     if extra:
@@ -84,12 +105,12 @@ def save_ckpt(path: str, model, extra: dict | None = None):
     torch.save(payload, path)
 
 
-def load_ckpt(path: str, model, map_location="cpu"):
+def load_ckpt(path: str, model: nn.Module, map_location: str = "cpu") -> Dict:
     ckpt = torch.load(path, map_location=map_location)
     model.load_state_dict(ckpt["model"], strict=True)
     return ckpt
 
 
-def print_kv(prefix: str, d: dict):
+def print_kv(prefix: str, d: Dict) -> None:
     msg = " ".join([f"{k}={v}" for k, v in d.items()])
     print(f"{prefix} {msg}")
